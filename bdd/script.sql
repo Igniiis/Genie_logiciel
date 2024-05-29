@@ -39,3 +39,7 @@ CREATE TABLE Borne (
     id_borne SERIAL PRIMARY KEY,
     etat_borne enum_etat_borne NOT NULL DEFAULT 'indisponible'
 );
+
+INSERT INTO Borne(etat_borne) VALUES ('disponible'),
+                                     ('disponible'),
+                                     ('disponible');
