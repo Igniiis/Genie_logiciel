@@ -1,3 +1,4 @@
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -8,6 +9,7 @@ public class Borne {
     private Client actualClient;
     private ClientDAO clientDAO;
     private VehiculeDAO vehiculeDAO;
+    private ReservationDAO reservationDAO;
 
     public Borne(){
         this.sc = new Scanner(System.in);
@@ -15,6 +17,7 @@ public class Borne {
         this.actualClient = null;
         this.clientDAO = new ClientDAO();
         this.vehiculeDAO = new VehiculeDAO();
+        this.reservationDAO = new ReservationDAO();
     }
 
     public int start(){
@@ -27,49 +30,51 @@ public class Borne {
     }
 
     private int choixHeader(){
-        if(this.actualClient == null){
-            System.out.print("que voulez-vous faire ?");
-            System.out.print("\n1. S'Enregistrer\n2. Connecter\n3. Quitter \n");
+        boolean test = true;
+        while (test){
+            if(this.actualClient == null){
+                System.out.print("que voulez-vous faire ?");
+                System.out.print("\n1. S'Enregistrer\n2. Connecter\n3. Quitter \n");
 
-            switch(lireEntierAvecVerification(3,1)){
-                case 1:
-                    this.enregistrement();
-                    this.choixHeader();
-                    break;
-                case 2:
-                    this.connexion();
-                    this.choixHeader();
-                    break;
-                case 3:
-                    System.out.println("Au revoir");
-                    return -1; //on quitte l'application
-                default:
-                    choixHeader();
-            }
+                switch(lireEntierAvecVerification(3,1)){
+                    case 1:
+                        this.enregistrement();
+                        break;
+                    case 2:
+                        this.connexion();
+                        break;
+                    case 3:
+                        System.out.println("Au revoir");
+                        test = false;
+                        return -1; //on quitte l'application
+                    default:
+                        System.out.println("Erreur");
+                }
 
-        }else{
-            System.out.println("Bonjour " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + ", que voulez-vous faire ?");
-            System.out.println("1. Réservations  \n2. Voitures \n3. Mon Compte \n4. Quitter");
+            }else{
+                System.out.println("Bonjour " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + ", que voulez-vous faire ?");
+                System.out.println("1. Réservations  \n2. Voitures \n3. Mon Compte \n4. Quitter");
 
-            switch(lireEntierAvecVerification(4,1)){
-                case 1:
-                    this.choixReservation();
-                    break;
-                case 2:
-                    this.choixVoitures();
-                    this.choixHeader();
-                    break;
-                case 3:
-                    this.choixCompte();
-                    this.choixHeader();
-                case 4:
-                    return -1; //quitter l'application
-                default:
-                    choixHeader();
+                switch(lireEntierAvecVerification(4,1)){
+                    case 1:
+                        this.choixReservation();
+                        break;
+                    case 2:
+                        this.choixVoitures();
+                        break;
+                    case 3:
+                        this.choixCompte();
+                        break;
+                    case 4:
+                        System.out.println("Au revoir.");
+                        test = false;
+                        return -1; //quitter l'application
+                    default:
+                        System.out.println("Erreur");
+                }
             }
         }
-        System.out.println("Au revoir.");
-        return 3;
+        return 1;
     }
 
     private void choixVoitures(){
@@ -165,7 +170,19 @@ public class Borne {
     }
 
     private int choixReservation(){
-        System.out.println("----Page des réservations----");
+        System.out.println("----Page des réservations de " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + "----");
+        //recupérer les réservations
+        String res = this.reservationDAO.recupReservation(this.actualClient.getId());
+        if(res == null){
+            System.out.println("Vous n'avez pas de réservations");
+        }else{
+            System.out.println(res);
+        }
+
+        System.out.println("1. Retour");
+        if(lireEntierAvecVerification(1) == 1){
+            this.choixHeader();
+        }
         return -1;
     }
 
