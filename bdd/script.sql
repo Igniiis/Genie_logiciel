@@ -41,6 +41,9 @@ CREATE TABLE Borne (
     etat_borne enum_etat_borne NOT NULL DEFAULT 'indisponible'
 );
 
+INSERT INTO Borne(etat_borne) VALUES ('disponible'),
+                                     ('disponible'),
+                                     ('disponible');
 CREATE TABLE Reservation (
     num_reservation SERIAL PRIMARY KEY,
     id_borne INTEGER NOT NULL,
