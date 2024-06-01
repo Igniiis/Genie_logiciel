@@ -1,14 +1,7 @@
 
 public class Main {
     public static void main(String[] args) {
-
-        Borne borne = new Borne();
-        borne.start();
-
+        Application app = new Application();
+        app.start();
     }
-    //Ceci est une ligne pour tester les branches
-
-
-    //TESTTTTTTTTTTTTTTTTTTTTT
-
 }

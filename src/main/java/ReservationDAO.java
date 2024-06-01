@@ -1,45 +1,45 @@
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class ReservationDAO {
 
-    public String recupReservation(int id_client) {
-
-        StringBuilder res = new StringBuilder(); // Initialise un StringBuilder
-
-        String sql = "SELECT id_reservation,id_client,id_borne,plaque_vehicule,date_debut_reservation,date_fin_reservation FROM reservation WHERE id_client = ?";
+    public Reservation insertReservation(int id_borne, String plaque_vehicule, Timestamp date_debut_reservation, Timestamp date_fin_reservation) {
+        String sql = "INSERT INTO reservation (id_borne, plaque_vehicule, date_debut_reservation, date_fin_reservation) VALUES ( ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id_client);
-            ResultSet rs = pstmt.executeQuery();
+            pstmt.setInt(1, id_borne);
+            pstmt.setString(2, plaque_vehicule);
+            pstmt.setTimestamp(3, date_debut_reservation);
+            pstmt.setTimestamp(4, date_fin_reservation);
 
-            // Parcourt le résultat de la requête
-            while (rs.next()) {
-                int id_reservation = rs.getInt("id_reservation");
-                int id_borne = rs.getInt("id_borne");
-                String plaque_vehicule = rs.getString("plaque_vehicule");
-                String date_debut_reservation = rs.getString("date_debut_reservation");
-                String date_fin_reservation = rs.getString("date_fin_reservation");
+            int affectedRows = pstmt.executeUpdate();
 
-                // Ajoute les informations à la chaîne de caractères
-                res.append("ID réservation: ").append(id_reservation)
-                        .append(", ID borne: ").append(id_borne)
-                        .append(", Plaque véhicule: ").append(plaque_vehicule)
-                        .append(", Date début réservation: ").append(date_debut_reservation)
-                        .append(", Date fin réservation: ").append(date_fin_reservation)
-                        .append("\n");
+            if (affectedRows == 0) {
+                throw new SQLException("Creating reservation failed, no rows affected.");
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
+            String sql2 = "SELECT num_reservation FROM reservation WHERE id_borne = ? AND plaque_vehicule = ? AND date_debut_reservation = ? AND date_fin_reservation = ?";
+            PreparedStatement pstmt2 = conn.prepareStatement(sql2);
+            pstmt2.setInt(1, id_borne);
+            pstmt2.setString(2, plaque_vehicule);
+            pstmt2.setTimestamp(3, date_debut_reservation);
+            pstmt2.setTimestamp(4, date_fin_reservation);
+            ResultSet rs = pstmt2.executeQuery();
+            rs.next();
+            int num_reservation = rs.getInt("num_reservation");
 
-        // Retourne la chaîne de caractères résultante
-        return res.toString();
+
+            Reservation reservation = new Reservation();
+            reservation.setNum_reservation(num_reservation);
+            reservation.setId_borne(id_borne);
+            reservation.setPlaque_vehicule(plaque_vehicule);
+            reservation.setDate_debut_reservation(date_debut_reservation);
+            reservation.setDate_fin_reservation(date_fin_reservation);
+            return reservation;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

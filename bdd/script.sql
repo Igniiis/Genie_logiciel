@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS client_vehicule CASCADE;
 DROP TABLE IF EXISTS client CASCADE;
 DROP TABLE IF EXISTS vehicule CASCADE;
 DROP TABLE IF EXISTS Borne CASCADE;
+DROP TABLE IF EXISTS Reservation CASCADE;
 
 -- Drop the domain
 DROP DOMAIN IF EXISTS enum_etat_borne;
@@ -45,12 +46,10 @@ INSERT INTO Borne(etat_borne) VALUES ('disponible'),
                                      ('disponible');
 CREATE TABLE Reservation (
     num_reservation SERIAL PRIMARY KEY,
-    id_client INTEGER NOT NULL,
     id_borne INTEGER NOT NULL,
     plaque_vehicule VARCHAR(9) NOT NULL,
     date_debut_reservation TIMESTAMP NOT NULL,
     date_fin_reservation TIMESTAMP NOT NULL,
-    FOREIGN KEY (id_client) REFERENCES client(id_client) ON DELETE CASCADE,
     FOREIGN KEY (id_borne) REFERENCES Borne(id_borne) ON DELETE CASCADE,
     FOREIGN KEY (plaque_vehicule) REFERENCES vehicule(plaque_vehicule) ON DELETE CASCADE
 );
