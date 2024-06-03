@@ -178,12 +178,15 @@ public class Application {
 
     private int choixReservation(){
         System.out.println("----Page des réservations de " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + "----");
-        System.out.println("1. Réserver une borne \n2. Retour");
+        System.out.println("1. Réserver une borne \n2. Accéder à ma Réservation \n3. Retour");
         switch(lireEntierAvecVerification(2,1)){
             case 1:
                 this.afficherBornes();
                 break;
             case 2:
+                this.accederAMaReservation();
+                break;
+            case 3:
                 break;
         }
         return -1;
@@ -213,7 +216,7 @@ public class Application {
             e.printStackTrace();
         }
 
-        ArrayList<Borne> bornes = this.borneDAO.getBorne("disponible", arrive, depart);
+        ArrayList<Borne> bornes = this.borneDAO.getBorne(arrive, depart);
 
         if (arrive != null && depart != null) {
             long differenceInMillis = depart.getTime() - arrive.getTime();
@@ -224,12 +227,12 @@ public class Application {
                 System.out.println("----Choisir votre borne----");
                 int sizeBorne = bornes.size();
                 for (int i = 0; i < sizeBorne; i++) {
-                    System.out.println((i+1) + ". Borne " + bornes.get(i).getId_borne() + " : " + bornes.get(i).getEtat_borne());
+                    System.out.println((i+1) + ". Borne " + bornes.get(i).getId_borne());
                 }
 
                 System.out.println("0. Retour");
                 this.sc = new Scanner(System.in);
-                int resBorne = this.lireEntierAvecVerification(sizeBorne + 1, 0);
+                int resBorne = this.lireEntierAvecVerification(sizeBorne, 0);
 
                 if(resBorne == 0) {
                     return 1;
@@ -276,7 +279,6 @@ public class Application {
         return -1;
     }
 
-
     public int reserverBorne(int id_borne, Timestamp arrive, Timestamp depart, String plaque) {
 
         Reservation reservation = this.reservationDAO.insertReservation(id_borne, plaque, arrive, depart);
@@ -287,6 +289,81 @@ public class Application {
             System.out.println("Reservation failed.");
             return -1;
         }
+    }
+
+    public int accederAMaReservation() {
+        System.out.println("----Accéder à ma réservation----");
+        System.out.println("Souhaitez vous rentrer votre plaque ou votre numéro de réservation ? (1. Plaque / 2. Numéro de réservation)");
+        int num_res = this.lireEntierAvecVerification(Integer.MAX_VALUE, 1);
+
+        Reservation reservation;
+
+        if (num_res == 1) {
+            System.out.println("Entrez votre plaque :");
+            this.sc = new Scanner(System.in);
+            String plaque = this.lireStringAvecVerification(9);
+            ArrayList<Reservation> reservations = this.reservationDAO.accederReservation(plaque, this.actualClient.getId());
+
+            if(reservations.isEmpty()) {
+                System.out.println("Aucune réservation trouvée.");
+                return 1;
+            }
+
+            //afficher les réservations
+            System.out.println("----Liste des réservations à cette plaque----");
+            for (int i = 0; i < reservations.size(); i++) {
+                System.out.println((i+1) + ". Réservation " + reservations.get(i).getNum_reservation() + " : "
+                        + reservations.get(i).getDate_debut_reservation() + " - " + reservations.get(i).getDate_fin_reservation());
+            }
+
+            System.out.println("0. Retour");
+            System.out.print("Choisissez une réservation : ");
+
+            int res = this.lireEntierAvecVerification(reservations.size()+1, 0);
+
+            if(res == 0) {
+                return 1;
+            }
+
+            reservation = reservations.get(res-1);
+
+        } else {
+            System.out.println("Entrez votre numéro de réservation :");
+            System.out.println("0. Retour");
+            this.sc = new Scanner(System.in);
+            int res  = this.lireEntierAvecVerification(Integer.MAX_VALUE, 0);
+
+            if(res == 0) {
+                return 1;
+            }
+
+            System.out.println("êtes-vous sûr de vouloir accéder à la réservation " + res + " ? (1. Oui / 2. Non)");
+
+            int confirm = this.lireEntierAvecVerification(2, 1);
+
+            if(confirm == 2) {
+                return 1;
+            }
+            reservation = this.reservationDAO.accederReservation(res, this.actualClient.getId());
+
+
+            if(reservation == null) {
+                System.out.println("Aucune réservation trouvée.");
+                return 1;
+            }
+        }
+
+        String testReserve = this.borneDAO.getBorne(reservation.getId_borne()).getEtat_borne();
+
+        if (testReserve.equals("reservé")) {
+            System.out.println("La borne est déjà réservée.");
+            return 1;
+        }
+
+        Borne b = this.borneDAO.updateBorne(reservation.getId_borne(), "reservé");
+
+        System.out.println("----Accès à la réservation " + reservation.getNum_reservation() + " - Borne : " + b.getId_borne() + "- de " + reservation.getDate_debut_reservation() + " à " + reservation.getDate_fin_reservation() + "----");
+        return 1;
     }
 
 
