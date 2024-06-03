@@ -11,18 +11,18 @@ class ClientTest {
     void setUp() {
         client = new Client();
         client.setId(1);
-        client.setNomClient("Doe");
-        client.setPrenomClient("John");
-        client.setAdresseClient("123 Main St");
+        client.setNomClient("Max");
+        client.setPrenomClient("Malle");
+        client.setAdresseClient("123 rue des modo");
         client.setNumTelClient("1234567890");
     }
 
     @Test
     void testGettersAndSetters() {
         assertEquals(1, client.getId());
-        assertEquals("Doe", client.getNomClient());
-        assertEquals("John", client.getPrenomClient());
-        assertEquals("123 Main St", client.getAdresseClient());
+        assertEquals("Max", client.getNomClient());
+        assertEquals("Malle", client.getPrenomClient());
+        assertEquals("123 rue des modo", client.getAdresseClient());
         assertEquals("1234567890", client.getNumTelClient());
         assertTrue(client.getListeVehicules().isEmpty());
     }
