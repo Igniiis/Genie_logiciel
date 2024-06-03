@@ -7,10 +7,20 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+
 public class Application {
 
     private int etat;
     private Scanner sc;
+
+    public Client getActualClient() {
+        return actualClient;
+    }
+
+    public void setActualClient(Client actualClient) {
+        this.actualClient = actualClient;
+    }
+
     private Client actualClient;
     private ClientDAO clientDAO;
     private VehiculeDAO vehiculeDAO;
@@ -386,7 +396,7 @@ public class Application {
         return -1;
     }
 
-    private int ajouter_voiture(){
+    public int ajouter_voiture(){
         this.sc = new Scanner(System.in);
         System.out.print("-----Page d'ajout d'une voiture-----");
         System.out.print("\nVeuillez donner la plaque d'immatriculation de la voiture : ");
@@ -415,7 +425,7 @@ public class Application {
     }
 
 
-    private int enregistrement(){
+    public int enregistrement(){
         this.sc = new Scanner(System.in);
         Client newClient = new Client();
         System.out.print("------------Page d'enregistrement------------");
