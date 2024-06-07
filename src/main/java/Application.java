@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -60,9 +61,9 @@ public class Application {
 
             }else{
                 System.out.println("Bonjour " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + ", que voulez-vous faire ?");
-                System.out.println("1. Réservations  \n2. Voitures \n3. Mon Compte \n4. Quitter");
+                System.out.println("1. Réservations  \n2. Voitures \n3. Utiliser borne sans réservations \n4. Mon Compte \n5. Quitter");
 
-                switch(lireEntierAvecVerification(4,1)){
+                switch(lireEntierAvecVerification(5,1)){
                     case 1:
                         this.choixReservation();
                         break;
@@ -70,9 +71,11 @@ public class Application {
                         this.choixVoitures();
                         break;
                     case 3:
+                        this.utiliserBorne();
+                    case 4:
                         this.choixCompte();
                         break;
-                    case 4:
+                    case 5:
                         System.out.println("Au revoir.");
                         test = false;
                         return -1; //quitter l'application
@@ -83,19 +86,21 @@ public class Application {
         }
         return 1;
     }
+    private void utiliserBorne(){
+        //TODO Faire le système de résa sans avoir à réserver.
+        System.out.println("TODO");
+    }
 
     private void choixVoitures(){
         System.out.println("-----Voitures-----");
-        System.out.println("1. Ajouter une voiture \n2. Enlever une voiture TODO \n3. Retour");
+        System.out.println("1. Ajouter une voiture \n2. Enlever une voiture \n3. Retour");
 
         switch (lireEntierAvecVerification(3,1)){
             case 1:
                 this.ajouter_voiture();
-                this.choixVoitures();
                 break;
             case 2:
                 this.removeCars();
-                this.choixVoitures();
                 break;
             case 3:
                 System.out.println("retour");
@@ -198,23 +203,10 @@ public class Application {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         System.out.println("Entrez la date d'arrivé (yyyy-MM-dd HH:mm):");
-        this.sc = new Scanner(System.in);
-        String arriveString = lireStringAvecVerification(16, 16);
-        Timestamp arrive = null;
-        try {
-            arrive = new Timestamp(dateFormat.parse(arriveString).getTime());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        Timestamp arrive = this.lireDateAvecVerification();
 
         System.out.println("Entrez la date de départ (yyyy-MM-dd HH:mm):");
-        String departString = lireStringAvecVerification(16, 16);
-        Timestamp depart = null;
-        try {
-            depart = new Timestamp(dateFormat.parse(departString).getTime());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        Timestamp depart = this.lireDateAvecVerification();
 
         ArrayList<Borne> bornes = this.borneDAO.getBorne(arrive, depart);
 
@@ -378,12 +370,11 @@ public class Application {
         int res = this.lireEntierAvecVerification(size + 1, 0);
 
         if(res == 0){
-            this.choixHeader();
-        }else{
-            this.actualClient = this.clientDAO.removeVehicule(this.actualClient, this.actualClient.getListeVehicules().get(res-1));
+            return -1;
         }
+        this.actualClient = this.clientDAO.removeVehicule(this.actualClient, this.actualClient.getListeVehicules().get(res-1));
 
-        return -1;
+        return 1;
     }
 
     private int ajouter_voiture(){
@@ -496,4 +487,40 @@ public class Application {
         return this.lireStringAvecVerification(maxLength, 1);
     }
 
+    private Timestamp lireDateAvecVerification(){
+        this.sc = new Scanner(System.in);
+
+
+        Timestamp timestamp = null;
+        boolean valid = false;
+
+        while (!valid) {
+            try {
+                System.out.print("\nDonnez le jour (1 à 31) : ");
+                int day = lireEntierAvecVerification(31, 1);
+                System.out.print("\nDonnez le mois (1 à 12) : ");
+                int month = lireEntierAvecVerification(12, 1) - 1; // Month is 0-based in Calendar
+                System.out.print("\nDonnez l'heure (0 à 23) : ");
+                int hour = lireEntierAvecVerification( 23);
+                System.out.print("\nDonnez les minutes (0 à 59) : ");
+                int minutes = lireEntierAvecVerification( 59);
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.DAY_OF_MONTH, day);
+                calendar.set(Calendar.MONTH, month);
+                calendar.set(Calendar.HOUR_OF_DAY, hour);
+                calendar.set(Calendar.MINUTE, minutes);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+
+                timestamp = new Timestamp(calendar.getTimeInMillis());
+                valid = true; // If we reach this point, the timestamp is valid
+            } catch (Exception e) {
+                System.out.println("La date fournie est invalide. Veuillez réessayer.");
+            }
+        }
+
+        return timestamp;
+
+    }
 }
