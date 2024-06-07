@@ -3,6 +3,41 @@ import java.util.ArrayList;
 
 public class ReservationDAO {
 
+    public ArrayList<Reservation> getReservations(int id_client) throws SQLException {
+
+        // Query to get all vehicles for the client
+        String sql = "SELECT * FROM client_vehicule WHERE id_client = ?";
+
+        // Query to get all upcoming reservations for these vehicles
+        String sql2 = "SELECT * FROM reservation WHERE plaque_vehicule = ? AND date_fin_reservation > now()";
+
+        ArrayList<Reservation> reservations = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt1 = conn.prepareStatement(sql);
+             PreparedStatement pstmt2 = conn.prepareStatement(sql2)) {
+
+            pstmt1.setInt(1, id_client);
+            ResultSet rsVehicule = pstmt1.executeQuery();
+
+            while (rsVehicule.next()) {
+                pstmt2.setString(1, rsVehicule.getString("plaque_vehicule"));
+                ResultSet rsReservation = pstmt2.executeQuery();
+
+                while (rsReservation.next()) {
+                    reservations.add(searchReservation(rsReservation));
+                }
+                rsReservation.close();
+            }
+
+            rsVehicule.close();
+            return reservations;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public Reservation insertReservation(int id_borne, String plaque_vehicule, Timestamp date_debut_reservation, Timestamp date_fin_reservation) {
         String sql = "INSERT INTO reservation (id_borne, plaque_vehicule, date_debut_reservation, date_fin_reservation) VALUES ( ?, ?, ?, ?)";
 
@@ -106,5 +141,19 @@ public class ReservationDAO {
         reservation.setDate_debut_reservation(rs.getTimestamp("date_debut_reservation"));
         reservation.setDate_fin_reservation(rs.getTimestamp("date_fin_reservation"));
         return reservation;
+    }
+
+    public void deleteReservation(int numReservation) {
+        String sql = "DELETE FROM reservation WHERE num_reservation = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, numReservation);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
