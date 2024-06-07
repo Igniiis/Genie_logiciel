@@ -1,3 +1,4 @@
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -225,8 +226,8 @@ public class Application {
 
     private int choixReservation(){
         System.out.println("----Page des réservations de " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + "----");
-        System.out.println("1. Réserver une borne \n2. Accéder à ma Réservation \n3. Retour");
-        switch(lireEntierAvecVerification(2,1)){
+        System.out.println("1. Réserver une borne \n2. Accéder à ma Réservation \n3. Gérer mes réservations \n4. Retour");
+        switch(lireEntierAvecVerification(4,1)){
             case 1:
                 this.afficherBornes();
                 break;
@@ -234,9 +235,54 @@ public class Application {
                 this.accederAMaReservation();
                 break;
             case 3:
+                this.mesReservations();
                 break;
+                case 4:
+                    break;
         }
         return -1;
+    }
+
+    public int mesReservations(){
+
+        ArrayList<Reservation> reservations = null;
+        try {
+            reservations = this.reservationDAO.getReservations(this.actualClient.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(reservations.isEmpty()){
+            System.out.println("Aucune réservation trouvée.");
+            return 1;
+        }
+
+        System.out.println("----Liste des réservations----");
+        for (int i = 0; i < reservations.size(); i++) {
+            System.out.println((i+1) + ". Réservation " + reservations.get(i).getNum_reservation() + " : "
+                    + reservations.get(i).getDate_debut_reservation() + " - " + reservations.get(i).getDate_fin_reservation()
+                    + " - Borne " + reservations.get(i).getId_borne() + " - Véhicule " + reservations.get(i).getPlaque_vehicule());
+        }
+
+        System.out.println("0. Retour");
+        System.out.print("Choisissez une réservation à supprimer : ");
+
+        int res = this.lireEntierAvecVerification(reservations.size()+1, 0);
+
+        if(res == 0) {
+            return 1;
+        }
+
+        System.out.println("Voulez-vous vraiment supprimer la réservation " + reservations.get(res-1).getNum_reservation() + " ? (1. Oui / 2. Non)");
+
+        int confirm = this.lireEntierAvecVerification(2, 1);
+
+        if(confirm == 2) {
+            return 1;
+        }
+        this.reservationDAO.deleteReservation(reservations.get(res-1).getNum_reservation());
+        System.out.println("Réservation supprimée.");
+        return 1;
     }
 
     public int afficherBornes(){
