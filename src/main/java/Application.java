@@ -1,8 +1,6 @@
-import java.sql.PreparedStatement;
-import java.sql.SQLOutput;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Scanner;
@@ -61,7 +59,7 @@ public class Application {
 
             }else{
                 System.out.println("Bonjour " + this.actualClient.getNomClient() + " " + this.actualClient.getPrenomClient() + ", que voulez-vous faire ?");
-                System.out.println("1. Réservations  \n2. Voitures \n3. Utiliser borne sans réservations \n4. Mon Compte \n5. Quitter");
+                System.out.println("1. Réservations  \n2. Voitures \n3. Accéder à une borne libre \n4. Mon Compte \n5. Quitter");
 
                 switch(lireEntierAvecVerification(5,1)){
                     case 1:
@@ -72,6 +70,7 @@ public class Application {
                         break;
                     case 3:
                         this.utiliserBorne();
+                        break;
                     case 4:
                         this.choixCompte();
                         break;
@@ -87,8 +86,41 @@ public class Application {
         return 1;
     }
     private void utiliserBorne(){
-        //TODO Faire le système de résa sans avoir à réserver.
-        System.out.println("TODO");
+        System.out.println("Pendant combien de temps voulez-vous utiliser la borne ?");
+
+        Timestamp now = Timestamp.from(Instant.now());
+
+        Timestamp end = this.lireHeureAvecVerification(now);
+
+
+        //récupération des bornes dispo pour ce temps
+        ArrayList<Borne> bornes = this.borneDAO.getBornes(now, end);
+
+        if(bornes.size()==0){
+            System.out.println("Aucune bornes disponibles pour vos horaires");
+            return;
+        }
+
+        System.out.println("Voici les bornes disponibles : ");
+        int i = 1;
+        for (Borne borne: bornes) {
+            System.out.println(i + ". Borne " + borne.getId_borne());
+            i++;
+        }
+
+        System.out.println("0. Retour");
+        int res = lireEntierAvecVerification(i);
+        if(res > 0){
+            System.out.println("Veuillez sélectionner votre voiture :");
+            String voiture = this.listeVehicule();
+
+            if(voiture == null){
+                System.out.println("Annulé");
+                return;
+            }
+
+            this.reserverBorne(bornes.get(res-1).getId_borne(), now, end, voiture);
+        }
     }
 
     private void choixVoitures(){
@@ -208,7 +240,7 @@ public class Application {
         System.out.println("Entrez la date de départ (yyyy-MM-dd HH:mm):");
         Timestamp depart = this.lireDateAvecVerification();
 
-        ArrayList<Borne> bornes = this.borneDAO.getBorne(arrive, depart);
+        ArrayList<Borne> bornes = this.borneDAO.getBornes(arrive, depart);
 
         if (arrive != null && depart != null) {
             long differenceInMillis = depart.getTime() - arrive.getTime();
@@ -358,22 +390,27 @@ public class Application {
         return 1;
     }
 
-
-    private int removeCars(){
-        System.out.println("Quel voiture supprimer ?");
+    private String listeVehicule(){
         int size = this.actualClient.getListeVehicules().size();
         for (int i = 0; i < size; i++) {
             System.out.println((i+1) + ". plaque " + this.actualClient.getListeVehicules().get(i));
         }
-
         System.out.println("0. Retour");
         int res = this.lireEntierAvecVerification(size + 1, 0);
 
         if(res == 0){
-            return -1;
+            return null;
         }
-        this.actualClient = this.clientDAO.removeVehicule(this.actualClient, this.actualClient.getListeVehicules().get(res-1));
 
+        return this.actualClient.getListeVehicules().get(res-1);
+    }
+
+    private int removeCars(){
+        System.out.println("Quel voiture supprimer ?");
+
+        String voiture = this.listeVehicule();
+
+        this.actualClient = this.clientDAO.removeVehicule(this.actualClient, voiture);
         return 1;
     }
 
@@ -521,6 +558,34 @@ public class Application {
         }
 
         return timestamp;
+    }
 
+    private Timestamp lireHeureAvecVerification(Timestamp now){
+        this.sc = new Scanner(System.in);
+
+        Timestamp timestamp = null;
+        boolean valid = false;
+
+        while(!valid){
+
+            try{
+                System.out.print("nombre d'heure (4 max): ");
+                int hour = lireEntierAvecVerification(4, 1);
+                int minute = 0;
+                if(hour < 4){
+                    System.out.print("nombre de minute : ");
+                    minute = lireEntierAvecVerification(59, 0);
+                }
+
+                long millisToAdd = TimeUnit.HOURS.toMillis(hour) + TimeUnit.MINUTES.toMillis(minute);
+
+                timestamp = new Timestamp(now.getTime() + millisToAdd);
+                valid = true;
+            }catch (Exception e) {
+                System.out.println("L'heure fournie est invalide. Veuillez réessayer.");
+            }
+        }
+
+        return timestamp;
     }
 }

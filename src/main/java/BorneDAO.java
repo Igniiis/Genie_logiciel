@@ -46,7 +46,7 @@ public class BorneDAO {
         return borne;
     }
 
-    public ArrayList<Borne> getBorne (Timestamp arrive, Timestamp depart){
+    public ArrayList<Borne> getBornes (Timestamp arrive, Timestamp depart){
 
             String sql = "WITH reservations_conflict AS (\n" +
                     "    SELECT\n" +

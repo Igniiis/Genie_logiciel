@@ -1,4 +1,5 @@
-# Genie_logiciel
+# Projet de Génie logiciel
+
 
 Maxence Malleret
 Gabin Hemmerle
