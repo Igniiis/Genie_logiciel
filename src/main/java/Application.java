@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
@@ -318,6 +320,19 @@ public class Application {
         Reservation reservation = this.reservationDAO.insertReservation(id_borne, plaque, arrive, depart);
 
         if (reservation != null) {
+            //partie ajout préparation message lors de la fin
+            long delay = depart.getTime() - Timestamp.from(Instant.now()).getTime();
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("C'est la fin de la réservation !" + reservation.getNum_reservation() + " pour la plaque " + reservation.getPlaque_vehicule());
+                    // Vous pouvez envoyer un SMS ou un email ici à la place
+                }
+            }, delay, TimeUnit.MILLISECONDS);
+
+            scheduler.shutdown();
+
             return reservation.getNum_reservation();
         } else {
             System.out.println("Reservation failed.");
